@@ -12,6 +12,7 @@ const Chatpage = () => {
     const [isTyping, setIsTyping] = useState(false);
     const chatEndRef = useRef(null);
 
+    // Scroll to bottom when new message arrives
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
@@ -68,12 +69,15 @@ const Chatpage = () => {
                     <div key={index} className={`chat-message ${msg.sender === 'User' ? 'user-message' : 'chatbot-message'}`}>
                         <div className="message-info">
                             <div className="message-icon">
-                                {msg.sender === 'User' ? <FaUser size={20} color="black" /> : <RiRobot2Fill size={20} color="black" />}
+                                {msg.sender === 'User'
+                                    ? <FaUser size={20} color="black" />
+                                    : <RiRobot2Fill size={20} color="black" />}
                             </div>
                             <p>{msg.message}</p>
                         </div>
                     </div>
                 ))}
+
                 {isTyping && (
                     <div className="chatbot-message">
                         <div className="message-info">
@@ -82,22 +86,34 @@ const Chatpage = () => {
                         </div>
                     </div>
                 )}
+
                 <div ref={chatEndRef} />
             </div>
 
             <div className="input-area">
-                <button className="lang-toggle" onClick={() => setLanguage(language === "English" ? "Tamil" : "English")}>
+                <button
+                    className="lang-toggle"
+                    onClick={() => setLanguage(language === "English" ? "Tamil" : "English")}
+                    title="Switch Language"
+                >
                     <GrLanguage />
                 </button>
+
                 <input
                     id="user-input"
                     type="text"
-                    placeholder="Type your message..."
+                    placeholder={`Type your message (${language})...`}
                     value={userInput}
                     onChange={handleInputChange}
                     onKeyDown={handleKeyPress}
                 />
-                <button className="send-button" onClick={sendMessage} disabled={userInput.trim() === ''}>
+
+                <button
+                    className="send-button"
+                    onClick={sendMessage}
+                    disabled={userInput.trim() === ''}
+                    title="Send"
+                >
                     <BsFillSendFill />
                 </button>
             </div>
