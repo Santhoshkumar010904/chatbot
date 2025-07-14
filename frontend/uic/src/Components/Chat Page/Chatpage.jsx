@@ -30,36 +30,51 @@ const Chatpage = () => {
     };
 
     const sendMessage = async () => {
-        if (userInput.trim() === '') return;
+    if (userInput.trim() === '') return;
 
-        const userMessage = { sender: 'User', message: userInput };
-        setMessages(prev => [...prev, userMessage]);
-        setUserInput('');
-        setIsTyping(true);
+    const userMessage = { sender: 'User', message: userInput };
+    setMessages(prev => [...prev, userMessage]);
+    setUserInput('');
+    setIsTyping(true);
 
-        try {
-            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/get_response`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userInput, language }),
-            });
+    try {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/get_response`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: userInput, language }),
+        });
 
-            if (!response.ok) throw new Error("Failed to get response");
-
-            const data = await response.json();
-            const botMessage = { sender: 'Chatbot', message: data.response };
-            setMessages(prev => [...prev, botMessage]);
-
-        } catch (error) {
-            console.error("Error:", error);
-            setMessages(prev => [
-                ...prev,
-                { sender: 'Chatbot', message: "⚠️ Error: AI is not responding." }
-            ]);
-        } finally {
-            setIsTyping(false);
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
         }
-    };
+
+        // Read response safely
+        const text = await response.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (jsonErr) {
+            throw new Error("Invalid JSON from server");
+        }
+
+        const botMessage = {
+            sender: 'Chatbot',
+            message: data.response || "⚠️ AI sent no response."
+        };
+
+        setMessages(prev => [...prev, botMessage]);
+
+    } catch (error) {
+        console.error("Error:", error.message);
+        setMessages(prev => [
+            ...prev,
+            { sender: 'Chatbot', message: "⚠️ Error: AI is not responding or returned bad data." }
+        ]);
+    } finally {
+        setIsTyping(false);
+    }
+};
+
 
     return (
         <div className="chat-container">
