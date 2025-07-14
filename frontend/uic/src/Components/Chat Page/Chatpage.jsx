@@ -37,7 +37,7 @@ const Chatpage = () => {
         setIsTyping(true);
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/get_response`, {
+           const response = await fetch("https://chatbot-backend.onrender.com/get_response", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: userInput, language }),
