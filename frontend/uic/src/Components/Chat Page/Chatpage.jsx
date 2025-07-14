@@ -32,12 +32,12 @@ const Chatpage = () => {
         if (userInput.trim() === '') return;
 
         const userMessage = { sender: 'User', message: userInput };
-        setMessages((prevMessages) => [...prevMessages, userMessage]);
+        setMessages(prev => [...prev, userMessage]);
         setUserInput('');
-        setIsTyping(true);  
+        setIsTyping(true);
 
         try {
-            const response = await fetch("http://127.0.0.1:5000/get_response", {
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/get_response`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: userInput, language }),
@@ -47,22 +47,21 @@ const Chatpage = () => {
 
             const data = await response.json();
             const botMessage = { sender: 'Chatbot', message: data.response };
+            setMessages(prev => [...prev, botMessage]);
 
-            setMessages((prevMessages) => [...prevMessages, botMessage]);
         } catch (error) {
-            console.error("Error fetching bot response:", error);
-            setMessages((prevMessages) => [
-                ...prevMessages,
+            console.error("Error:", error);
+            setMessages(prev => [
+                ...prev,
                 { sender: 'Chatbot', message: "⚠️ Error: AI is not responding." }
             ]);
         } finally {
-            setIsTyping(false); 
+            setIsTyping(false);
         }
     };
 
     return (
         <div className="chat-container">
-        
             <div className="chat-area">
                 <h2>Hey, Nice to Meet You!</h2>
                 {messages.map((msg, index) => (
@@ -85,6 +84,7 @@ const Chatpage = () => {
                 )}
                 <div ref={chatEndRef} />
             </div>
+
             <div className="input-area">
                 <button className="lang-toggle" onClick={() => setLanguage(language === "English" ? "Tamil" : "English")}>
                     <GrLanguage />
