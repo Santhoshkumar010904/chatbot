@@ -5,13 +5,13 @@ import os
 import groq
 import re
 
-# Load .env variables
+# Load environment variables from .env
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
-# Securely load API key from .env
+# Load Groq API key from environment variables
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 client = groq.Client(api_key=GROQ_API_KEY)
 
@@ -55,15 +55,27 @@ Provide a helpful and clear explanation about: "{user_message}"
         messages=[{"role": "user", "content": prompt}]
     )
 
+    # Debug log (optional)
+    print("Groq Raw Reply:", response.choices[0].message.content)
+
     return clean_response(response.choices[0].message.content)
 
 @app.route("/get_response", methods=["POST"])
 def get_response():
-    data = request.json
-    user_input = data.get("message", "")
-    language = data.get("language", "English")  # default to English
-    bot_reply = get_groq_response(user_input, language)
-    return jsonify({"response": bot_reply})
+    try:
+        data = request.get_json() or {}
+        user_input = data.get("message", "").strip()
+        language = data.get("language", "English").strip()
+
+        if not user_input:
+            return jsonify({"response": "⚠️ Please provide a message."}), 400
+
+        bot_reply = get_groq_response(user_input, language)
+        return jsonify({"response": bot_reply})
+
+    except Exception as e:
+        print("❌ Error in /get_response:", str(e))
+        return jsonify({"response": "⚠️ Internal server error. Please try again later."}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
