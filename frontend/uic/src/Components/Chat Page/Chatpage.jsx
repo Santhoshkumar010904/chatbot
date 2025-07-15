@@ -37,25 +37,27 @@ const Chatpage = () => {
         setIsTyping(true);
 
         try {
-           const response = await fetch("https://chatbot-backend.onrender.com/get_response", {
+            const response = await fetch("http://127.0.0.1:5000/get_response", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: userInput, language }),
             });
 
-            if (!response.ok) throw new Error("Failed to get response");
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
 
             const text = await response.text();
             let data;
             try {
                 data = JSON.parse(text);
-            } catch (err) {
+            } catch (jsonErr) {
                 throw new Error("Invalid JSON from server");
             }
 
             const botMessage = {
                 sender: 'Chatbot',
-                message: data.response || "⚠️ AI returned an empty message."
+                message: data.response || "⚠️ AI sent no response."
             };
 
             setMessages(prev => [...prev, botMessage]);
@@ -64,7 +66,7 @@ const Chatpage = () => {
             console.error("Error:", error.message);
             setMessages(prev => [
                 ...prev,
-                { sender: 'Chatbot', message: "⚠️ Error: AI is not responding or sent bad data." }
+                { sender: 'Chatbot', message: "⚠️ Error: AI is not responding or returned bad data." }
             ]);
         } finally {
             setIsTyping(false);
@@ -87,6 +89,7 @@ const Chatpage = () => {
                         </div>
                     </div>
                 ))}
+
                 {isTyping && (
                     <div className="chatbot-message">
                         <div className="message-info">
@@ -95,6 +98,7 @@ const Chatpage = () => {
                         </div>
                     </div>
                 )}
+
                 <div ref={chatEndRef} />
             </div>
 
@@ -110,7 +114,7 @@ const Chatpage = () => {
                 <input
                     id="user-input"
                     type="text"
-                    placeholder={`Type your message... (${language})`}
+                    placeholder={`Type your message (${language})...`}
                     value={userInput}
                     onChange={handleInputChange}
                     onKeyDown={handleKeyPress}
